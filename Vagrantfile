@@ -10,7 +10,6 @@ nodes = [
   "agent2.#{domain}"
 ]
 
-
 #VM Config:
 Vagrant.configure("2") do |config|
   config.vm.box = "puppetlabs/centos-7.2-64-nocm"
@@ -50,7 +49,34 @@ Vagrant.configure("2") do |config|
 
   SHELL
 
-  
+  config.vm.define :"#{master}.#{domain}" do |v|
+    v.vm.network "private_network", ip: pm_ip
+    v.vm.provider "virtualbox" do |vb|
+      vb.memory = "6000"
+      vb.cpus = "2"
+    end
+    v.vm.hostname = "#{master}.#{domain}"
+    v.vm.provision "shell", inline: <<-SHELL
+      yum groupinstall -y 'Development Tools'
+    SHELL
+  end
+
+  start_addr = 50
+  (0..nodes.size-1).each do |i|
+    node = nodes[i]
+    config.vm.define node, autostart: autostart(node) do |v|
+      vip = base_ip + (start_addr + (i * 10)).to_s
+      v.vm.network "private_network", ip: vip
+      v.vm.hostname = node
+    end
+  end
+
+
+  # add puppmaster to every VMs hosts file
+  config.vm.provision :hosts do |provisioner|
+    provisioner.autoconfigure = true
+    provisioner.sync_hosts = true
+  end
 
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
