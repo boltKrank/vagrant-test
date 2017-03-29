@@ -1,0 +1,42 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+domain = "gitlab.demo.internal"
+base_ip = "192.168.13.99"
+
+Vagrant.configure("2") do |config|
+  config.vm.box="puppetlabs/centos-7.2-64-nocm"
+
+
+  # common tasks for all hosts
+  config.vm.provision "shell", inline: <<-SHELL
+    # install handy tools
+    sudo yum install -y wget links
+    sudo yum install curl policycoreutils openssh-server openssh-clients
+    sudo systemctl enable sshd
+    sudo systemctl start sshd
+    sudo yum install postfix
+    sudo systemctl enable postfix
+    sudo systemctl start postfix
+    sudo firewall-cmd --permanent --add-service=http
+    sudo systemctl reload firewalld
+
+    curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh | sudo bash
+    sudo yum install gitlab-ce
+
+    sudo gitlab-ctl reconfigure
+
+
+    # restart network or our VM will be unreachable :(
+    systemctl restart network
+    systemctl disable firewalld
+    systemctl stop firewalld
+  SHELL
+
+  config.vm.define domain, autostart: true do |v|
+    vip = base_ip
+    v.vm.network "private_network", ip: vip
+    v.vm.hostname = domain
+  end
+
+end
