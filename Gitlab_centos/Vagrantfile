@@ -5,7 +5,7 @@ domain = "gitlab.demo.internal"
 base_ip = "192.168.13.99"
 
 Vagrant.configure("2") do |config|
-  config.vm.box="puppetlabs/centos-7.2-64-nocm"
+  config.vm.box="puppetlabs/ubuntu-14.04-64-nocm"
 
 
   # common tasks for all hosts
@@ -20,6 +20,8 @@ Vagrant.configure("2") do |config|
     sudo systemctl start postfix
     sudo firewall-cmd --permanent --add-service=http
     sudo systemctl reload firewalld
+
+    #Install gitLab
     curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh | sudo bash
     sudo yum install -y gitlab-ce
     sudo gitlab-ctl reconfigure
@@ -30,10 +32,7 @@ Vagrant.configure("2") do |config|
     systemctl stop firewalld
   SHELL
 
-  config.vm.define domain, autostart: true do |v|
-    vip = base_ip
-    v.vm.network "private_network", ip: vip
-    v.vm.hostname = domain
-  end
+    config.vm.network "private_network", ip: base_ip
+    config.vm.hostname = domain
 
 end
