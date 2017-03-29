@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+domain = "gitlab.demo.internal"
+base_ip = "192.168.13.99"
+
+Vagrant.configure("2") do |config|
+  config.vm.box="ubuntu/trusty64"
+
+
+  # common tasks for all hosts
+  config.vm.provision "shell", inline: <<-SHELL
+
+  # install handy tools
+  sudo apt-get --assume-yes install curl openssh-server ca-certificates
+
+  #Postfix silent install
+  debconf-set-selections <<< "postfix postfix/mailname string gitlab.demo.internal"
+  debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Gitlab Site'"
+  apt-get install --assume-yes postfix
+
+  #Gitlab install
+  # curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash
+  # sudo apt-get --assume-yes install gitlab-ce
+  # sudo gitlab-ctl reconfigure
+
+  SHELL
+
+    config.vm.network "private_network", ip: base_ip
+    config.vm.hostname = domain
+
+end
