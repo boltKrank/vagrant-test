@@ -20,12 +20,9 @@ Vagrant.configure("2") do |config|
     sudo systemctl start postfix
     sudo firewall-cmd --permanent --add-service=http
     sudo systemctl reload firewalld
-
     curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh | sudo bash
-    sudo yum install gitlab-ce
-
+    sudo yum install -y gitlab-ce
     sudo gitlab-ctl reconfigure
-
 
     # restart network or our VM will be unreachable :(
     systemctl restart network
